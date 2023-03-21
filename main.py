@@ -11,6 +11,7 @@ from PIL import Image
 from PIL.ExifTags import TAGS
 from datetime import datetime
 import os
+import piexif
 
 EMIAL = os.environ['EMIAL']
 PASSWORD = os.environ['PASSWORD']
@@ -80,16 +81,24 @@ def scrap_for_images_url(driver):
     ATTACHMENTS_FILES_COUNT = ATTACHMENTS_FILES_COUNT + len(attachments_urls)
     return images_urls + attachments_urls
 
-def download_images(prefix, urls):
+def download_images(day, urls):
     counter = 1
     for u in urls:
         print("\t\tDownloading {}/{}".format(counter, len(urls)))
         counter = counter + 1
         with urlopen(u) as file:
             content = file.read()   
-        path = OUTPUT_DIR + "/" + prefix + "-" + u.rsplit('/', 1)[-1]
+        path = OUTPUT_DIR + "/" + day.strftime("%Y-%m-%d") + "-" + u.rsplit('/', 1)[-1]
         with open(path, 'wb') as download:
             download.write(content)
+        add_date_to_exif(path, day)
+
+def add_date_to_exif(image, day):            
+    image_file = Image.open(image)
+    exif_dict = piexif.load(image_file.info["exif"])
+    exif_dict["0th"][piexif.ImageIFD.DateTime]=day.strftime("%Y:%m:%d %H:%M:%S")
+    exif_bytes = piexif.dump(exif_dict)
+    image_file.save(image, exif=exif_bytes)
 
 def scrap_site():
     if not os.path.exists(OUTPUT_DIR):
@@ -103,7 +112,7 @@ def scrap_site():
         photos_url = []
         navigate_to_day(driver, day)
         photos_url = scrap_for_images_url(driver)
-        download_images(day.strftime("%Y-%m-%d"), photos_url)
+        download_images(day, photos_url)
         photos_count = photos_count + len(photos_url)
     driver.quit()
     print("Summary:")
