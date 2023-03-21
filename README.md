@@ -21,5 +21,8 @@ Parameters:
 - `EMAIL` and `PASSWORD` are credentials you use to login to kita page
 - `BASE_URL` is kita page base url
 - `GROUP_ID` is the group id of your kid
-- `DAY_FROM` and `DAY_TO` is the timespan to use, both parameters are inclusive
+- `DAY_FROM` and `DAY_TO` is the timespan to use, both parameters are optional and inclusive. If not provided `DAY_TO` will be set to current date and `DAY_FROM` to current day minus 7 days
 - `/home/path/where/i/want/pics/to/be` - replace it with real path
+
+
+Docker images are produced with github actions, see packages page.

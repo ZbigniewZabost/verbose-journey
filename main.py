@@ -9,16 +9,16 @@ from dateutil.rrule import DAILY, rrule, MO, TU, WE, TH, FR
 from dateutil import parser 
 from PIL import Image
 from PIL.ExifTags import TAGS
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import piexif
 
-EMIAL = os.environ['EMIAL']
-PASSWORD = os.environ['PASSWORD']
-BASE_URL = os.environ['BASE_URL'] # e.g. "https://paiiigeeee.mykita.com"
-DAY_FROM = os.environ['DAY_FROM'] # e.g. "2022-12-31"
-DAY_TO = os.environ['DAY_TO'] # e.g  "2022-12-31"
-GROUP_ID = os.environ['GROUP_ID'] # e.g "11"
+EMIAL = os.getenv('EMIAL')
+PASSWORD = os.getenv('PASSWORD')
+BASE_URL = os.getenv('BASE_URL') # e.g. "https://paiiigeeee.mykita.com"
+DAY_FROM = os.getenv('DAY_FROM') # e.g. "2022-12-31"
+DAY_TO = os.getenv('DAY_TO') # e.g  "2022-12-31"
+GROUP_ID = os.getenv('GROUP_ID') # e.g "11"
 
 OUTPUT_DIR = "/data"
 JOURNAL_ENTRIES_COUNT = 0
@@ -101,8 +101,13 @@ def add_date_to_exif(image, day):
     image_file.save(image, exif=exif_bytes)
 
 def scrap_site():
+    global DAY_FROM, DAY_TO
     if not os.path.exists(OUTPUT_DIR):
         os.makedirs(OUTPUT_DIR)
+    if not DAY_TO:
+        DAY_TO = datetime.now().strftime("%Y-%m-%d")
+    if not DAY_FROM:
+        DAY_FROM =  (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
     driver = setup_driver()    
     login(driver, "{}/sessions/sign_in".format(BASE_URL), EMIAL, PASSWORD)
     photos_count = 0
