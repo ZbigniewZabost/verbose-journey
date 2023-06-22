@@ -98,7 +98,10 @@ def download_images(day, urls):
         path = OUTPUT_DIR + "/" + day.strftime("%Y-%m-%d") + "-" + u.rsplit('/', 1)[-1]
         with open(path, 'wb') as download:
             download.write(content)
-        add_date_to_exif(path, day)
+        try:
+            add_date_to_exif(path, day)
+        except:
+            print("\t\t\tError during exif parsing. Ignoring and proceeding.")
 
 
 def add_date_to_exif(image, day):
