@@ -13,5 +13,8 @@
       "matchCurrentVersion": "!/^0/",
       "automerge": true
     }
-  ]
+  ],
+  "automerge": true,
+  "automergeType": "pr",
+  "requiredStatusChecks": null
 }
