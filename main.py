@@ -11,6 +11,7 @@ from PIL import Image
 from datetime import datetime, timedelta
 import os
 import piexif
+from pathvalidate import sanitize_filename
 
 EMAIL = os.getenv('EMAIL')
 PASSWORD = os.getenv('PASSWORD')
@@ -61,48 +62,63 @@ def navigate_to_day(driver, day):
     )
 
 
-def scrap_for_images_url(driver):
+def scrap_images(driver, day):
     global JOURNAL_ENTRIES_COUNT, GALLERY_IMAGES_COUNT, ATTACHMENTS_FILES_COUNT
-    images_urls = []  # list of images urls from gallery modal
-    attachments_urls = []  # list of files urls added as attachments to journal activity
     entries = driver.find_elements(By.CLASS_NAME, 'JournalEntrySmall')
     JOURNAL_ENTRIES_COUNT = JOURNAL_ENTRIES_COUNT + len(entries)
     print("\tFound {} journal entries in the day view".format(len(entries)))
     for e in entries:
+        images_urls = []  # list of images urls from gallery modal
+        attachments_urls = []  # list of files urls added as attachments to journal activity
+
         e.click()
         WebDriverWait(driver=driver, timeout=10).until(
             lambda x: x.execute_script("return document.readyState === 'complete'")
         )
+
+        entry_title = "no_entry_title"
+        entry_title_elements = driver.find_elements(By.XPATH, "//div[contains(@class, 'title-light')]")
+        if len(entry_title_elements) > 0:
+            entry_title = entry_title_elements[0].text
+            print("\t\t" + entry_title[:80] + ":")
+            entry_title = entry_title[:25]
+
         photos_elements = driver.find_elements(By.XPATH,
                                                "//div[contains(@class, 'carousel-item')]/img[@loading='lazy']")
         for p in photos_elements:
             images_urls.append(p.get_attribute("src"))
+
+        download_media(day, entry_title, images_urls)
+        GALLERY_IMAGES_COUNT = GALLERY_IMAGES_COUNT + len(images_urls)
+
         attachments = driver.find_elements(By.XPATH,
                                            "//table/tbody/tr/td/a[contains(@class, 'btn-light') and contains(@class, 'btn')]")
         for a in attachments:
             attachments_urls.append(a.get_attribute("href"))
+
+        download_media(day, entry_title, attachments_urls)
+        ATTACHMENTS_FILES_COUNT = ATTACHMENTS_FILES_COUNT + len(attachments_urls)
+
         driver.find_element(By.XPATH, '//a[contains(@class, "new-modal__close")]').click()
+
     print("\t\tFound {} images and {} attachments".format(len(images_urls), len(attachments_urls)))
-    GALLERY_IMAGES_COUNT = GALLERY_IMAGES_COUNT + len(images_urls)
-    ATTACHMENTS_FILES_COUNT = ATTACHMENTS_FILES_COUNT + len(attachments_urls)
-    return images_urls + attachments_urls
 
-
-def download_images(day, urls):
+def download_media(day, title, urls):
     counter = 1
     for u in urls:
-        print("\t\tDownloading {}/{}".format(counter, len(urls)))
+        original_file_name = u.rsplit('/', 1)[-1]
+        new_file_name = sanitize_filename(day.strftime("%Y-%m-%d") + "_" + title + "-" + str(counter)) + "." + original_file_name.rsplit('.', 1)[-1]
+        print("\t\t\tDownloading {}/{} - {}".format(counter, len(urls), new_file_name))
         counter = counter + 1
         with urlopen(u) as file:
             content = file.read()
-        path = OUTPUT_DIR + "/" + day.strftime("%Y-%m-%d") + "-" + u.rsplit('/', 1)[-1]
+        path = OUTPUT_DIR + "/" + new_file_name
         with open(path, 'wb') as download:
             download.write(content)
         try:
             add_date_to_exif(path, day)
         except:
             print("\t\t\tError during exif parsing. Ignoring and proceeding.")
-
 
 def add_date_to_exif(image, day):
     image_file = Image.open(image)
@@ -122,21 +138,17 @@ def scrap_site():
         DAY_FROM = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
     driver = setup_driver()
     login(driver, "{}/sessions/sign_in".format(BASE_URL), EMAIL, PASSWORD)
-    photos_count = 0
     days_count = 0
     for day in work_week_days(DAY_FROM, DAY_TO):
         days_count = days_count + 1
         navigate_to_day(driver, day)
-        photos_url = scrap_for_images_url(driver)
-        download_images(day, photos_url)
-        photos_count = photos_count + len(photos_url)
+        scrap_images(driver, day)
     driver.quit()
     print("Summary:")
     print("\tChecked {} days between {} and {}".format(days_count, DAY_FROM, DAY_TO))
     print("\tVisited {} journal entries".format(JOURNAL_ENTRIES_COUNT))
     print("\tFound {} images in galleries and {} files in attachments".format(GALLERY_IMAGES_COUNT,
                                                                               ATTACHMENTS_FILES_COUNT))
-    print("\tDownloaded {} files".format(photos_count))
 
 
 scrap_site()

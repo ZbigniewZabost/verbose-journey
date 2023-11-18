@@ -3,3 +3,4 @@ webdriver-manager
 python-dateutil
 Pillow
 piexif
+pathvalidate
