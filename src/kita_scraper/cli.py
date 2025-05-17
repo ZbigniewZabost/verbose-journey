@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""
-Kita Scraper - A tool to scrape pictures from your kita site and save them locally.
-
-This script is the entry point for the Kita Scraper application.
-"""
+"""Command-line interface for the Kita Scraper."""
 
 import argparse
 import logging

@@ -1,0 +1,2 @@
+[console_scripts]
+kita-scraper = kita_scraper.cli:main

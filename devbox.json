@@ -1,0 +1,33 @@
+{
+  "packages": [
+    "python@3.11",
+    "firefox",
+    "geckodriver",
+    "python311Packages.pip",
+    "python311Packages.virtualenv",
+    "docker",
+    "podman"
+  ],
+  "shell": {
+    "init_hook": [
+      "python -m venv .venv || true",
+      "source .venv/bin/activate",
+      "pip install -r requirements.txt",
+      "pip install -e .",
+      "mkdir -p data",
+      "if [ -f .env ]; then echo 'Environment file .env exists'; else echo 'Consider creating .env file from .env.example'; fi"
+    ],
+    "scripts": {
+      "run": "source .venv/bin/activate && source \"$(pwd)/.env\" && python main.py",
+      "test": "source .venv/bin/activate && python -m pytest",
+      "setup-env": "source \"$(pwd)/.env.example\"",
+      "load-env": "source \"$(pwd)/.env\"",
+      "docker-build": "docker build -t verbose-journey .",
+      "docker-run": "source \"$(pwd)/.env\" && mkdir -p \"$(pwd)/data\" && chmod 777 \"$(pwd)/data\" && docker run --rm -t --name verbose-journey -e EMAIL=\"${EMAIL:-your-email@example.com}\" -e PASSWORD=\"${PASSWORD:-your-password}\" -e BASE_URL=\"${BASE_URL:-https://paiiigeeee.mykita.com}\" -e GROUP_ID=\"${GROUP_ID:-11}\" -e DAY_FROM=\"${DAY_FROM:-2023-01-01}\" -e DAY_TO=\"${DAY_TO:-2023-01-31}\" -v \"$(pwd)/data:/data:Z\" verbose-journey",
+      "podman-build": "podman build -t verbose-journey .",
+      "podman-run": "source \"$(pwd)/.env\" && mkdir -p \"$(pwd)/data\" && chmod 777 \"$(pwd)/data\" && podman run --rm -t --name verbose-journey -e EMAIL=\"${EMAIL:-your-email@example.com}\" -e PASSWORD=\"${PASSWORD:-your-password}\" -e BASE_URL=\"${BASE_URL:-https://paiiigeeee.mykita.com}\" -e GROUP_ID=\"${GROUP_ID:-11}\" -e DAY_FROM=\"${DAY_FROM:-2023-01-01}\" -e DAY_TO=\"${DAY_TO:-2023-01-31}\" -v \"$(pwd)/data:/data:Z\" verbose-journey",
+      "container-build": "if command -v podman >/dev/null 2>&1; then devbox run podman-build; else devbox run docker-build; fi",
+      "container-run": "if command -v podman >/dev/null 2>&1; then devbox run podman-run; else devbox run docker-run; fi"
+    }
+  }
+}

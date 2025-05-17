@@ -1,0 +1,17 @@
+README.md
+setup.py
+src/kita_scraper/__init__.py
+src/kita_scraper/cli.py
+src/kita_scraper/config.py
+src/kita_scraper/scraper.py
+src/kita_scraper/utils.py
+src/kita_scraper.egg-info/PKG-INFO
+src/kita_scraper.egg-info/SOURCES.txt
+src/kita_scraper.egg-info/dependency_links.txt
+src/kita_scraper.egg-info/entry_points.txt
+src/kita_scraper.egg-info/requires.txt
+src/kita_scraper.egg-info/top_level.txt
+tests/test_config.py
+tests/test_main.py
+tests/test_scraper.py
+tests/test_utils.py
